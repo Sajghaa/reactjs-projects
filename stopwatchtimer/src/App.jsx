@@ -13,7 +13,7 @@ export default function StopwatchTimer() {
   const prevMinuteRef = useRef(0);
 
   const formatStopwatch = (ms) => {
-    const totalSeconds = Math.floor(ms / 1000);
+    const totalSeconds = Math.floor(ms / 1000); // 
     const minutes = Math.floor(totalSeconds / 60);
     const seconds = totalSeconds % 60;
     const millis = Math.floor((ms % 1000) / 10);
