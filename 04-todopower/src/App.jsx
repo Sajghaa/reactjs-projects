@@ -1,121 +1,107 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+// src/App.jsx
+import React, { useState } from 'react';
+import toast, { Toaster } from 'react-hot-toast';
+import useLocalStorage from './hooks/useLocalStorage';
+import TodoList from './components/TodoList';
+import TodoForm from './components/TodoForm';
+import TodoFilter from './components/TodoFilter';
+import Stats from './components/Stats';
+import './App.css';
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [todos, setTodos] = useLocalStorage('todos', []);
+  const [filter, setFilter] = useState('all'); // 'all', 'active', 'completed'
+
+  // Add new todo
+  const addTodo = (todoData) => {
+    const newTodo = {
+      id: crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(),
+      text: todoData.text,
+      completed: false,
+      createdAt: new Date().toISOString(),
+      priority: todoData.priority || 'medium'
+    };
+    
+    setTodos([...todos, newTodo]);
+    toast.success('Task added! 🎉');
+  };
+
+  // Toggle complete status
+  const toggleTodo = (id) => {
+    setTodos(todos.map(todo => 
+      todo.id === id ? { ...todo, completed: !todo.completed } : todo
+    ));
+    const todo = todos.find(t => t.id === id);
+    toast.success(todo?.completed ? 'Task uncompleted' : 'Task completed! ✅');
+  };
+
+  // Delete todo
+  const deleteTodo = (id) => {
+    setTodos(todos.filter(todo => todo.id !== id));
+    toast.error('Task deleted');
+  };
+
+  // Edit todo
+  const editTodo = (id, newText) => {
+    setTodos(todos.map(todo =>
+      todo.id === id ? { ...todo, text: newText } : todo
+    ));
+    toast.success('Task updated!');
+  };
+
+  // Clear all completed
+  const clearCompleted = () => {
+    const activeTodos = todos.filter(todo => !todo.completed);
+    setTodos(activeTodos);
+    toast.success('Completed tasks cleared');
+  };
+
+  // Filter todos
+  const filteredTodos = todos.filter(todo => {
+    if (filter === 'active') return !todo.completed;
+    if (filter === 'completed') return todo.completed;
+    return true;
+  });
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+    <div className="app">
+      <div className="container">
+        <header>
+          <h1>✨ TodoPower</h1>
+          <p>Simple but powerful task manager</p>
+        </header>
 
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+        <TodoForm onAdd={addTodo} />
+        
+        <TodoFilter 
+          currentFilter={filter} 
+          onFilterChange={setFilter}
+          onClearCompleted={clearCompleted}
+          hasCompleted={todos.some(t => t.completed)}
+        />
+        
+        <TodoList 
+          todos={filteredTodos}
+          onToggle={toggleTodo}
+          onDelete={deleteTodo}
+          onEdit={editTodo}
+        />
+        
+        <Stats todos={todos} />
+        
+        <Toaster 
+          position="bottom-center"
+          toastOptions={{
+            duration: 2000,
+            style: {
+              background: '#363636',
+              color: '#fff',
+            },
+          }}
+        />
+      </div>
+    </div>
+  );
 }
 
-export default App
+export default App;
