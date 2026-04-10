@@ -10,20 +10,18 @@ const initialState = {
     preferences: {
       theme: 'light',
       notifications: true,
-      soundEffects: true,
     },
   },
   ui: {
     sidebarOpen: true,
     modalOpen: false,
     selectedTodo: null,
-    view: 'list', // list, grid, kanban
+    view: 'list',
   },
   stats: {
     totalTasks: 0,
     completedTasks: 0,
     streak: 0,
-    lastActive: null,
   },
 };
 
@@ -31,7 +29,7 @@ export const useStore = create(
   persist(
     immer((set, get) => ({
       ...initialState,
-      
+
       // Todo Actions
       addTodo: (todo) => {
         set((state) => {
@@ -42,15 +40,13 @@ export const useStore = create(
             updatedAt: new Date().toISOString(),
             completed: false,
             favorite: false,
-            tags: todo.tags || [],
-            subtasks: todo.subtasks || [],
           };
           state.todos.unshift(newTodo);
           state.stats.totalTasks = state.todos.length;
           state.stats.completedTasks = state.todos.filter(t => t.completed).length;
         });
       },
-      
+
       updateTodo: (id, updates) => {
         set((state) => {
           const index = state.todos.findIndex(t => t.id === id);
@@ -64,7 +60,7 @@ export const useStore = create(
           }
         });
       },
-      
+
       deleteTodo: (id) => {
         set((state) => {
           state.todos = state.todos.filter(t => t.id !== id);
@@ -72,34 +68,24 @@ export const useStore = create(
           state.stats.completedTasks = state.todos.filter(t => t.completed).length;
         });
       },
-      
+
       toggleComplete: (id) => {
         set((state) => {
           const todo = state.todos.find(t => t.id === id);
           if (todo) {
             todo.completed = !todo.completed;
-            if (todo.completed) {
-              todo.completedAt = new Date().toISOString();
-              // Update streak
-              const today = new Date().toDateString();
-              if (state.stats.lastActive !== today) {
-                state.stats.streak++;
-                state.stats.lastActive = today;
-              }
-            }
             state.stats.completedTasks = state.todos.filter(t => t.completed).length;
           }
         });
       },
-      
+
       toggleFavorite: (id) => {
         set((state) => {
           const todo = state.todos.find(t => t.id === id);
           if (todo) todo.favorite = !todo.favorite;
         });
       },
-      
-      // Bulk Actions
+
       deleteAllCompleted: () => {
         set((state) => {
           state.todos = state.todos.filter(t => !t.completed);
@@ -107,28 +93,23 @@ export const useStore = create(
           state.stats.completedTasks = 0;
         });
       },
-      
-      // UI Actions
+
       setView: (view) => {
         set((state) => {
           state.ui.view = view;
         });
       },
-      
+
       setModalOpen: (isOpen, todo = null) => {
         set((state) => {
           state.ui.modalOpen = isOpen;
           state.ui.selectedTodo = todo;
         });
       },
-      
-      // Theme Actions
+
       toggleTheme: () => {
         set((state) => {
-          state.user.preferences.theme = 
-            state.user.preferences.theme === 'light' ? 'dark' : 'light';
-          
-          // Apply theme to DOM
+          state.user.preferences.theme = state.user.preferences.theme === 'light' ? 'dark' : 'light';
           if (state.user.preferences.theme === 'dark') {
             document.documentElement.classList.add('dark');
           } else {
@@ -136,20 +117,11 @@ export const useStore = create(
           }
         });
       },
-      
-      // Analytics
+
       getStats: () => {
         const state = get();
-        const completedThisWeek = state.todos.filter(t => {
-          if (!t.completedAt) return false;
-          const weekAgo = new Date();
-          weekAgo.setDate(weekAgo.getDate() - 7);
-          return new Date(t.completedAt) > weekAgo;
-        }).length;
-        
         return {
           ...state.stats,
-          completedThisWeek,
           productivity: state.stats.totalTasks === 0 ? 0 : 
             (state.stats.completedTasks / state.stats.totalTasks) * 100,
         };
@@ -157,7 +129,6 @@ export const useStore = create(
     })),
     {
       name: 'unforgettable-todo',
-      getStorage: () => localStorage,
     }
   )
 );
