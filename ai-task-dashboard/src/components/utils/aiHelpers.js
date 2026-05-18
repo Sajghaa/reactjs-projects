@@ -51,13 +51,12 @@ export const generateAITasks = (existingTasks) => {
 };
 
 export const predictTaskCompletion = (task) => {
-  // Simple AI prediction logic
   const factors = {
     priority: { high: 1.2, medium: 1, low: 0.8 },
     complexity: { high: 1.5, medium: 1, low: 0.7 },
   };
 
-  const baseTime = 3; // base 3 days
+  const baseTime = 3;
   const priorityFactor = factors.priority[task.priority] || 1;
   
   return Math.round(baseTime * priorityFactor);
