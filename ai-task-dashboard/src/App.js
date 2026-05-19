@@ -9,53 +9,103 @@ import TaskBoard from './components/Dashboard/TaskBoard';
 import AIInsights from './components/Dashboard/AIInsights';
 import ParticleField from './components/UI/ParticleField';
 
+const drawerWidth = 280;
+
 function App() {
   const [activeView, setActiveView] = useState('dashboard');
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  const handleDrawerToggle = () => {
+    setMobileOpen(!mobileOpen);
+  };
 
   return (
     <TaskProvider>
-      <Box sx={{ display: 'flex', minHeight: '100vh' }}>
+      <Box sx={{ display: 'flex', minHeight: '100vh', position: 'relative' }}>
         <ParticleField />
-        <Sidebar activeView={activeView} setActiveView={setActiveView} />
-        <Box component="main" sx={{ flexGrow: 1, ml: '280px' }}>
-          <Header />
-          <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={activeView}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.3 }}
-              >
-                <Grid container spacing={3}>
-                  {activeView === 'dashboard' && (
-                    <>
-                      <Grid item xs={12} lg={8}>
-                        <Analytics />
-                      </Grid>
-                      <Grid item xs={12} lg={4}>
-                        <AIInsights />
-                      </Grid>
+        
+        {/* Sidebar */}
+        <Box
+          component="nav"
+          sx={{
+            width: { md: drawerWidth },
+            flexShrink: { md: 0 },
+          }}
+        >
+          <Sidebar
+            activeView={activeView}
+            setActiveView={setActiveView}
+            mobileOpen={mobileOpen}
+            handleDrawerToggle={handleDrawerToggle}
+            drawerWidth={drawerWidth}
+          />
+        </Box>
+
+        {/* Main Content */}
+        <Box
+          component="main"
+          sx={{
+            flexGrow: 1,
+            width: { md: `calc(100% - ${drawerWidth}px)` },
+            minHeight: '100vh',
+            display: 'flex',
+            flexDirection: 'column',
+          }}
+        >
+          <Header handleDrawerToggle={handleDrawerToggle} />
+          
+          <Box
+            sx={{
+              flex: 1,
+              p: { xs: 2, sm: 3, md: 4 },
+              overflow: 'auto',
+            }}
+          >
+            <Container
+              maxWidth={false}
+              sx={{
+                maxWidth: '1600px',
+                mx: 'auto',
+              }}
+            >
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={activeView}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.3 }}
+                  style={{ width: '100%' }}
+                >
+                  <Grid container spacing={3}>
+                    {activeView === 'dashboard' && (
+                      <>
+                        <Grid item xs={12} lg={8}>
+                          <Analytics />
+                        </Grid>
+                        <Grid item xs={12} lg={4}>
+                          <AIInsights />
+                        </Grid>
+                        <Grid item xs={12}>
+                          <TaskBoard />
+                        </Grid>
+                      </>
+                    )}
+                    {activeView === 'tasks' && (
                       <Grid item xs={12}>
-                        <TaskBoard />
+                        <TaskBoard expanded />
                       </Grid>
-                    </>
-                  )}
-                  {activeView === 'tasks' && (
-                    <Grid item xs={12}>
-                      <TaskBoard expanded />
-                    </Grid>
-                  )}
-                  {activeView === 'insights' && (
-                    <Grid item xs={12}>
-                      <AIInsights expanded />
-                    </Grid>
-                  )}
-                </Grid>
-              </motion.div>
-            </AnimatePresence>
-          </Container>
+                    )}
+                    {activeView === 'insights' && (
+                      <Grid item xs={12}>
+                        <AIInsights expanded />
+                      </Grid>
+                    )}
+                  </Grid>
+                </motion.div>
+              </AnimatePresence>
+            </Container>
+          </Box>
         </Box>
       </Box>
     </TaskProvider>
