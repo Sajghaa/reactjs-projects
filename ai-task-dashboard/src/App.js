@@ -1,114 +1,41 @@
 import React, { useState } from 'react';
-import { Box, Container, Grid } from '@mui/material';
-import { motion, AnimatePresence } from 'framer-motion';
+import { ThemeProvider, createTheme, CssBaseline, Box } from '@mui/material';
 import { TaskProvider } from './context/TaskContext';
-import Header from './components/Layout/Header';
 import Sidebar from './components/Layout/Sidebar';
-import Analytics from './components/Dashboard/Analytics';
-import TaskBoard from './components/Dashboard/TaskBoard';
-import AIInsights from './components/Dashboard/AIInsights';
-import ParticleField from './components/UI/ParticleField';
+import Header from './components/Layout/Header';
+import Dashboard from './components/Dashboard/Dashboard';
+import Particles from './components/UI/Particles';
 
-const drawerWidth = 280;
+const darkTheme = createTheme({
+  palette: {
+    mode: 'dark',
+    primary: { main: '#6C63FF' },
+    secondary: { main: '#FF6584' },
+    background: { default: '#0A0D14', paper: '#141824' },
+  },
+  typography: {
+    fontFamily: '"Inter", sans-serif',
+  },
+  shape: { borderRadius: 12 },
+});
 
 function App() {
-  const [activeView, setActiveView] = useState('dashboard');
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  const handleDrawerToggle = () => {
-    setMobileOpen(!mobileOpen);
-  };
-
   return (
-    <TaskProvider>
-      <Box sx={{ display: 'flex', minHeight: '100vh', position: 'relative' }}>
-        <ParticleField />
-        
-        {/* Sidebar */}
-        <Box
-          component="nav"
-          sx={{
-            width: { md: drawerWidth },
-            flexShrink: { md: 0 },
-          }}
-        >
-          <Sidebar
-            activeView={activeView}
-            setActiveView={setActiveView}
-            mobileOpen={mobileOpen}
-            handleDrawerToggle={handleDrawerToggle}
-            drawerWidth={drawerWidth}
-          />
-        </Box>
-
-        {/* Main Content */}
-        <Box
-          component="main"
-          sx={{
-            flexGrow: 1,
-            width: { md: `calc(100% - ${drawerWidth}px)` },
-            minHeight: '100vh',
-            display: 'flex',
-            flexDirection: 'column',
-          }}
-        >
-          <Header handleDrawerToggle={handleDrawerToggle} />
-          
-          <Box
-            sx={{
-              flex: 1,
-              p: { xs: 2, sm: 3, md: 4 },
-              overflow: 'auto',
-            }}
-          >
-            <Container
-              maxWidth={false}
-              sx={{
-                maxWidth: '1600px',
-                mx: 'auto',
-              }}
-            >
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={activeView}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  transition={{ duration: 0.3 }}
-                  style={{ width: '100%' }}
-                >
-                  <Grid container spacing={3}>
-                    {activeView === 'dashboard' && (
-                      <>
-                        <Grid item xs={12} lg={8}>
-                          <Analytics />
-                        </Grid>
-                        <Grid item xs={12} lg={4}>
-                          <AIInsights />
-                        </Grid>
-                        <Grid item xs={12}>
-                          <TaskBoard />
-                        </Grid>
-                      </>
-                    )}
-                    {activeView === 'tasks' && (
-                      <Grid item xs={12}>
-                        <TaskBoard expanded />
-                      </Grid>
-                    )}
-                    {activeView === 'insights' && (
-                      <Grid item xs={12}>
-                        <AIInsights expanded />
-                      </Grid>
-                    )}
-                  </Grid>
-                </motion.div>
-              </AnimatePresence>
-            </Container>
+    <ThemeProvider theme={darkTheme}>
+      <CssBaseline />
+      <TaskProvider>
+        <Box sx={{ display: 'flex', minHeight: '100vh' }}>
+          <Particles />
+          <Sidebar mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} />
+          <Box sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
+            <Header onMenuClick={() => setMobileOpen(true)} />
+            <Dashboard />
           </Box>
         </Box>
-      </Box>
-    </TaskProvider>
+      </TaskProvider>
+    </ThemeProvider>
   );
 }
 
