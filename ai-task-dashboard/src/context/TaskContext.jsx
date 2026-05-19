@@ -3,195 +3,124 @@ import { v4 as uuidv4 } from 'uuid';
 
 const TaskContext = createContext();
 
-const initialState = {
-  tasks: [
-    {
-      id: '1',
-      title: 'Design new dashboard layout',
-      description: 'Create wireframes and mockups for the new analytics dashboard',
-      priority: 'high',
-      status: 'in-progress',
-      progress: 75,
-      assignee: 'Alex',
-      comments: 3,
-      attachments: 2,
-      createdAt: new Date('2024-01-15'),
-      dueDate: '2024-02-01',
-      labels: ['design', 'feature'],
-    },
-    {
-      id: '2',
-      title: 'Implement user authentication',
-      description: 'Set up OAuth2.0 with Google and GitHub providers',
-      priority: 'high',
-      status: 'todo',
-      progress: 0,
-      assignee: 'Sarah',
-      comments: 5,
-      attachments: 1,
-      createdAt: new Date('2024-01-16'),
-      dueDate: '2024-02-05',
-      labels: ['feature', 'security'],
-    },
-    {
-      id: '3',
-      title: 'Write API documentation',
-      description: 'Document all REST endpoints with examples',
-      priority: 'medium',
-      status: 'review',
-      progress: 90,
-      assignee: 'Mike',
-      comments: 2,
-      attachments: 3,
-      createdAt: new Date('2024-01-14'),
-      dueDate: '2024-01-30',
-      labels: ['documentation'],
-    },
-    {
-      id: '4',
-      title: 'Fix navigation bug on mobile',
-      description: 'Menu doesn\'t close properly on iOS devices',
-      priority: 'medium',
-      status: 'in-progress',
-      progress: 45,
-      assignee: 'Alex',
-      comments: 1,
-      attachments: 0,
-      createdAt: new Date('2024-01-17'),
-      dueDate: '2024-01-25',
-      labels: ['bug'],
-    },
-    {
-      id: '5',
-      title: 'Update dependencies',
-      description: 'Update React to v19 and fix breaking changes',
-      priority: 'low',
-      status: 'completed',
-      progress: 100,
-      assignee: 'Sarah',
-      comments: 0,
-      attachments: 1,
-      createdAt: new Date('2024-01-10'),
-      dueDate: '2024-01-20',
-      labels: ['maintenance'],
-    },
-  ],
-  aiSuggestions: [],
-  stats: {
-    total: 5,
-    completed: 1,
-    inProgress: 2,
-    todo: 1,
-    productivity: 20,
+const initialTasks = [
+  {
+    id: '1',
+    title: 'Design Dashboard UI',
+    description: 'Create modern dashboard layout with glass morphism effects',
+    status: 'in-progress',
+    priority: 'high',
+    progress: 70,
+    assignee: 'Alex',
+    dueDate: '2024-03-01',
+    tags: ['design', 'frontend'],
   },
-  loading: false,
-};
+  {
+    id: '2',
+    title: 'Setup Authentication',
+    description: 'Implement JWT auth with refresh tokens',
+    status: 'todo',
+    priority: 'high',
+    progress: 0,
+    assignee: 'Sarah',
+    dueDate: '2024-03-05',
+    tags: ['backend', 'security'],
+  },
+  {
+    id: '3',
+    title: 'API Documentation',
+    description: 'Document all REST endpoints with Swagger',
+    status: 'review',
+    priority: 'medium',
+    progress: 85,
+    assignee: 'Mike',
+    dueDate: '2024-02-28',
+    tags: ['documentation'],
+  },
+  {
+    id: '4',
+    title: 'Fix Mobile Navigation',
+    description: 'Menu not closing on mobile devices',
+    status: 'in-progress',
+    priority: 'medium',
+    progress: 40,
+    assignee: 'Alex',
+    dueDate: '2024-02-25',
+    tags: ['bug', 'frontend'],
+  },
+  {
+    id: '5',
+    title: 'Database Optimization',
+    description: 'Optimize slow queries and add indexes',
+    status: 'todo',
+    priority: 'low',
+    progress: 0,
+    assignee: 'Sarah',
+    dueDate: '2024-03-10',
+    tags: ['backend', 'performance'],
+  },
+];
 
-function taskReducer(state, action) {
+const reducer = (state, action) => {
   switch (action.type) {
     case 'ADD_TASK':
-      const newTask = {
-        ...action.payload,
-        id: uuidv4(),
-        createdAt: new Date(),
-        comments: 0,
-        attachments: 0,
-        progress: 0,
-      };
       return {
         ...state,
-        tasks: [...state.tasks, newTask],
+        tasks: [...state.tasks, { ...action.payload, id: uuidv4(), createdAt: new Date() }],
       };
     case 'UPDATE_TASK':
       return {
         ...state,
-        tasks: state.tasks.map(task =>
-          task.id === action.payload.id ? { ...task, ...action.payload } : task
-        ),
+        tasks: state.tasks.map(t => t.id === action.payload.id ? { ...t, ...action.payload } : t),
       };
     case 'DELETE_TASK':
       return {
         ...state,
-        tasks: state.tasks.filter(task => task.id !== action.payload),
+        tasks: state.tasks.filter(t => t.id !== action.payload),
       };
     case 'MOVE_TASK':
       return {
         ...state,
-        tasks: state.tasks.map(task =>
-          task.id === action.payload.taskId
-            ? { ...task, status: action.payload.newStatus }
-            : task
-        ),
-      };
-    case 'SET_AI_SUGGESTIONS':
-      return {
-        ...state,
-        aiSuggestions: action.payload,
-      };
-    case 'CALCULATE_STATS':
-      const total = state.tasks.length;
-      const completed = state.tasks.filter(t => t.status === 'completed').length;
-      const inProgress = state.tasks.filter(t => t.status === 'in-progress').length;
-      const todo = state.tasks.filter(t => t.status === 'todo').length;
-      const review = state.tasks.filter(t => t.status === 'review').length;
-      const productivity = total > 0 ? (completed / total) * 100 : 0;
-      return {
-        ...state,
-        stats: { total, completed, inProgress, todo, review, productivity },
+        tasks: state.tasks.map(t => t.id === action.payload.id ? { ...t, status: action.payload.status } : t),
       };
     default:
       return state;
   }
-}
+};
 
 export function TaskProvider({ children }) {
-  const [state, dispatch] = useReducer(taskReducer, initialState);
+  const [state, dispatch] = useReducer(reducer, { tasks: initialTasks });
 
-  const addTask = useCallback((task) => {
-    dispatch({ type: 'ADD_TASK', payload: task });
-    dispatch({ type: 'CALCULATE_STATS' });
-  }, []);
+  const addTask = useCallback((task) => dispatch({ type: 'ADD_TASK', payload: task }), []);
+  const updateTask = useCallback((task) => dispatch({ type: 'UPDATE_TASK', payload: task }), []);
+  const deleteTask = useCallback((id) => dispatch({ type: 'DELETE_TASK', payload: id }), []);
+  const moveTask = useCallback((id, status) => dispatch({ type: 'MOVE_TASK', payload: { id, status } }), []);
 
-  const updateTask = useCallback((task) => {
-    dispatch({ type: 'UPDATE_TASK', payload: task });
-    dispatch({ type: 'CALCULATE_STATS' });
-  }, []);
-
-  const deleteTask = useCallback((taskId) => {
-    dispatch({ type: 'DELETE_TASK', payload: taskId });
-    dispatch({ type: 'CALCULATE_STATS' });
-  }, []);
-
-  const moveTask = useCallback((taskId, newStatus) => {
-    dispatch({ type: 'MOVE_TASK', payload: { taskId, newStatus } });
-    dispatch({ type: 'CALCULATE_STATS' });
-  }, []);
-
-  const generateAISuggestions = useCallback(() => {
-    import('../utils/aiHelpers').then(({ generateAITasks }) => {
-      const suggestions = generateAITasks(state.tasks);
-      dispatch({ type: 'SET_AI_SUGGESTIONS', payload: suggestions });
-    });
-  }, [state.tasks]);
+  const getStats = () => {
+    const total = state.tasks.length;
+    const completed = state.tasks.filter(t => t.status === 'completed').length;
+    const inProgress = state.tasks.filter(t => t.status === 'in-progress').length;
+    const todo = state.tasks.filter(t => t.status === 'todo').length;
+    const review = state.tasks.filter(t => t.status === 'review').length;
+    return { total, completed, inProgress, todo, review };
+  };
 
   return (
     <TaskContext.Provider value={{
-      ...state,
+      tasks: state.tasks,
+      stats: getStats(),
       addTask,
       updateTask,
       deleteTask,
       moveTask,
-      generateAISuggestions,
     }}>
       {children}
     </TaskContext.Provider>
   );
 }
 
-export const useTaskContext = () => {
+export const useTasks = () => {
   const context = useContext(TaskContext);
-  if (!context) {
-    throw new Error('useTaskContext must be used within a TaskProvider');
-  }
+  if (!context) throw new Error('useTasks must be used within TaskProvider');
   return context;
 };
