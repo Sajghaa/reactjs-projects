@@ -86,35 +86,38 @@ function TaskCard({ task, onEdit, onDelete }) {
       whileHover={{ y: -4 }}
       transition={{ duration: 0.2 }}
     >
-      <Card
-        sx={{
-          background: 'rgba(255, 255, 255, 0.03)',
-          backdropFilter: 'blur(10px)',
-          border: '1px solid rgba(255, 255, 255, 0.1)',
-          borderRadius: 3,
-          transition: 'all 0.3s ease',
-          cursor: 'pointer',
-          position: 'relative',
-          overflow: 'visible',
-          '&:hover': {
-            border: `1px solid ${priorityColors[task.priority]?.border || 'rgba(108, 99, 255, 0.5)'}`,
-            boxShadow: '0 8px 32px rgba(108, 99, 255, 0.15)',
+    <Card
+      sx={{
+        background: 'rgba(255, 255, 255, 0.03)',
+        backdropFilter: 'blur(10px)',
+        border: '1px solid rgba(255, 255, 255, 0.08)',
+        borderRadius: 3,
+        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+        cursor: 'pointer',
+        position: 'relative',
+        overflow: 'visible',
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        '&:hover': {
+          border: '1px solid rgba(108, 99, 255, 0.3)',
+          boxShadow: '0 8px 32px rgba(108, 99, 255, 0.15)',
+          transform: 'translateY(-2px)',
+        },
+        ...(task.priority === 'high' && {
+          '&::before': {
+            content: '""',
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            height: 3,
+            background: 'linear-gradient(90deg, #FF4842, #FF6584)',
+            borderRadius: '3px 3px 0 0',
           },
-          ...(task.priority === 'high' && {
-            '&::before': {
-              content: '""',
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              right: 0,
-              height: 3,
-              background: 'linear-gradient(90deg, #FF4842, #FF6584)',
-              borderRadius: '3px 3px 0 0',
-            },
-          }),
-        }}
-        onClick={() => onEdit?.(task)}
-      >
+        }),
+      }}
+    >
         <CardContent sx={{ p: 2.5, '&:last-child': { pb: 2.5 } }}>
           {/* Header */}
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
