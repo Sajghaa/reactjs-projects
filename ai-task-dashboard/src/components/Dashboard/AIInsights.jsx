@@ -72,7 +72,10 @@ function AIInsights({ expanded = false }) {
         background: 'rgba(20, 20, 40, 0.6)',
         backdropFilter: 'blur(10px)',
         border: '1px solid rgba(255, 255, 255, 0.1)',
+        borderRadius: 4,
         height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
       }}
     >
       <CardContent>
