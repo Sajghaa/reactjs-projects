@@ -9,58 +9,30 @@
 html, body, #root {
   height: 100%;
   width: 100%;
-  overflow-x: hidden;
 }
 
 body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  font-family: 'Inter', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background: #0A0A1A;
+  background: #0A0D14;
   color: #ffffff;
-}
-
-#root {
-  display: flex;
-  flex-direction: column;
+  overflow-x: hidden;
 }
 
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.03);
-  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.02);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, #6C63FF, #FF6584);
-  border-radius: 4px;
-  transition: background 0.3s ease;
+  background: rgba(108, 99, 255, 0.3);
+  border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(180deg, #7B73FF, #FF7594);
-}
-
-::selection {
-  background: rgba(108, 99, 255, 0.3);
-  color: white;
-}
-
-/* Smooth scrolling */
-html {
-  scroll-behavior: smooth;
-}
-
-/* Remove focus outline for mouse users, keep for keyboard */
-:focus:not(:focus-visible) {
-  outline: none;
-}
-
-:focus-visible {
-  outline: 2px solid #6C63FF;
-  outline-offset: 2px;
+  background: rgba(108, 99, 255, 0.5);
 }
