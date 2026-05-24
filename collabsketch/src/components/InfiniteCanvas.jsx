@@ -10,14 +10,11 @@ export default function InfiniteCanvas() {
   const socketRef = useRef(null);
 
   useEffect(() => {
-    // ---- Connect to WebSocket server ----
     socketRef.current = io('http://localhost:3001');
     const socket = socketRef.current;
 
-    // Listen for drawings from other users
     socket.on('draw', (data) => {
       if (!fabricCanvasRef.current) return;
-      // Deserialize the Fabric object and add it to canvas
       fabric.util.enlivenObjects([data], (objects) => {
         objects.forEach(obj => {
           fabricCanvasRef.current.add(obj);
@@ -26,7 +23,6 @@ export default function InfiniteCanvas() {
       });
     });
 
-    // Optional: handle clear command
     socket.on('clear', () => {
       if (fabricCanvasRef.current) {
         fabricCanvasRef.current.clear();
@@ -35,7 +31,6 @@ export default function InfiniteCanvas() {
       }
     });
 
-    // ---- Initialize Fabric Canvas ----
     if (fabricCanvasRef.current) {
       fabricCanvasRef.current.dispose();
     }
@@ -62,15 +57,81 @@ export default function InfiniteCanvas() {
       canvas.renderAll();
     }, 0);
 
-    // ---- Broadcast drawing events to other users ----
-    const handleObjectAdded = (e) => {
-      if (e.target) {
-        socket.emit('draw', e.target.toJSON());
-      }
-    };
-    canvas.on('object:added', handleObjectAdded);
+    // ---- Drawing mode state ----
+    let currentMode = 'pen';
+    let isDrawingShape = false;
+    let startPoint = null;
+    let currentShape = null;
 
-    // ---- Zoom & Pan (same as before) ----
+    const setMode = (mode) => {
+      currentMode = mode;
+      canvas.isDrawingMode = (mode === 'pen');
+      canvas.selection = (mode === 'pen');
+      canvas.defaultCursor = (mode === 'pen') ? 'default' : 'crosshair';
+    };
+
+    const clearCanvas = () => {
+      canvas.clear();
+      canvas.backgroundColor = '#fafafa';
+      canvas.renderAll();
+      socket.emit('clear');
+    };
+
+    window.infiniteCanvas = { setMode, clearCanvas };
+
+    // ---- Shape drawing ----
+    canvas.on('mouse:down', (opt) => {
+      if (currentMode !== 'pen' && !opt.target) {
+        isDrawingShape = true;
+        const pointer = canvas.getPointer(opt.e);
+        startPoint = { x: pointer.x, y: pointer.y };
+        let shapeOptions = {
+          left: startPoint.x,
+          top: startPoint.y,
+          width: 0,
+          height: 0,
+          fill: 'transparent',
+          stroke: '#000000',
+          strokeWidth: 2,
+          selectable: true,
+          hasControls: true,
+        };
+        if (currentMode === 'rectangle') {
+          currentShape = new fabric.Rect(shapeOptions);
+        } else if (currentMode === 'circle') {
+          currentShape = new fabric.Ellipse({
+            ...shapeOptions,
+            rx: 0,
+            ry: 0,
+          });
+        }
+        canvas.add(currentShape);
+      }
+    });
+
+    canvas.on('mouse:move', (opt) => {
+      if (!isDrawingShape || !currentShape) return;
+      const pointer = canvas.getPointer(opt.e);
+      let width = pointer.x - startPoint.x;
+      let height = pointer.y - startPoint.y;
+      if (currentMode === 'rectangle') {
+        currentShape.set({ width: width, height: height });
+      } else if (currentMode === 'circle') {
+        currentShape.set({ rx: Math.abs(width/2), ry: Math.abs(height/2) });
+        currentShape.set({ left: startPoint.x + width/2, top: startPoint.y + height/2 });
+      }
+      canvas.renderAll();
+    });
+
+    canvas.on('mouse:up', () => {
+      if (isDrawingShape && currentShape) {
+        socket.emit('draw', currentShape.toJSON());
+        isDrawingShape = false;
+        currentShape = null;
+      }
+    });
+
+    // ---- Zoom & Pan ----
     canvas.on('mouse:wheel', (opt) => {
       const delta = opt.e.deltaY;
       let zoom = canvas.getZoom();
@@ -105,13 +166,18 @@ export default function InfiniteCanvas() {
       canvas.selection = true;
     });
 
-    // ---- Cleanup ----
-    return () => {
-      if (socket) {
-        socket.off('draw');
-        socket.off('clear');
-        socket.disconnect();
+    // Broadcast pen drawings
+    const handleObjectAdded = (e) => {
+      if (e.target && currentMode === 'pen') {
+        socket.emit('draw', e.target.toJSON());
       }
+    };
+    canvas.on('object:added', handleObjectAdded);
+
+    return () => {
+      socket.off('draw');
+      socket.off('clear');
+      socket.disconnect();
       if (fabricCanvasRef.current) {
         fabricCanvasRef.current.dispose();
         fabricCanvasRef.current = null;
