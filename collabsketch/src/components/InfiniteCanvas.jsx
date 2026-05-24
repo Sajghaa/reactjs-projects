@@ -7,41 +7,36 @@ export default function InfiniteCanvas() {
   const fabricCanvasRef = useRef(null);
 
   useEffect(() => {
-    // Cleanup previous instance
     if (fabricCanvasRef.current) {
       fabricCanvasRef.current.dispose();
       fabricCanvasRef.current = null;
     }
 
-    // Create canvas instance
+    // Create canvas with light background (so you see the drawing area)
     const canvas = new fabric.Canvas(canvasRef.current, {
-      backgroundColor: '#f8f9fa',
+      backgroundColor: '#fafafa',  // light gray background
       width: window.innerWidth,
       height: window.innerHeight,
       selection: true,
     });
     fabricCanvasRef.current = canvas;
 
-    // Wait for Fabric to be ready (setTimeout avoids timing issues)
+    // Enable drawing
     setTimeout(() => {
       if (!canvas || canvas.disposed) return;
-      
-      // Enable drawing mode AFTER canvas is ready
       canvas.isDrawingMode = true;
-      
-      // Now freeDrawingBrush exists – set its properties safely
       if (canvas.freeDrawingBrush) {
         canvas.freeDrawingBrush.width = 3;
         canvas.freeDrawingBrush.color = '#000000';
       } else {
-        // Fallback: create the brush manually
         canvas.freeDrawingBrush = new fabric.PencilBrush(canvas);
         canvas.freeDrawingBrush.width = 3;
         canvas.freeDrawingBrush.color = '#000000';
       }
+      canvas.renderAll();
     }, 0);
 
-    // ----- Zoom & Pan -----
+    // Zoom & Pan
     canvas.on('mouse:wheel', (opt) => {
       const delta = opt.e.deltaY;
       let zoom = canvas.getZoom();
@@ -76,7 +71,6 @@ export default function InfiniteCanvas() {
       canvas.selection = true;
     });
 
-    // Cleanup on unmount
     return () => {
       if (fabricCanvasRef.current) {
         fabricCanvasRef.current.dispose();
@@ -85,5 +79,11 @@ export default function InfiniteCanvas() {
     };
   }, []);
 
-  return <canvas ref={canvasRef} className="w-screen h-screen block" />;
+  return (
+    <div className="relative w-screen h-screen overflow-hidden shadow-inner">
+      {/* Outer border to show canvas boundaries */}
+      <div className="absolute inset-0 border-4 border-blue-400 pointer-events-none z-10" />
+      <canvas ref={canvasRef} className="w-full h-full block" />
+    </div>
+  );
 }
