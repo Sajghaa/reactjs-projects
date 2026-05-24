@@ -12,16 +12,14 @@ export default function InfiniteCanvas() {
       fabricCanvasRef.current = null;
     }
 
-    // Create canvas with light background (so you see the drawing area)
     const canvas = new fabric.Canvas(canvasRef.current, {
-      backgroundColor: '#fafafa',  // light gray background
+      backgroundColor: '#fafafa',
       width: window.innerWidth,
       height: window.innerHeight,
       selection: true,
     });
     fabricCanvasRef.current = canvas;
 
-    // Enable drawing
     setTimeout(() => {
       if (!canvas || canvas.disposed) return;
       canvas.isDrawingMode = true;
@@ -36,7 +34,6 @@ export default function InfiniteCanvas() {
       canvas.renderAll();
     }, 0);
 
-    // Zoom & Pan
     canvas.on('mouse:wheel', (opt) => {
       const delta = opt.e.deltaY;
       let zoom = canvas.getZoom();
@@ -80,10 +77,9 @@ export default function InfiniteCanvas() {
   }, []);
 
   return (
-    <div className="relative w-screen h-screen overflow-hidden shadow-inner">
-      {/* Outer border to show canvas boundaries */}
-      <div className="absolute inset-0 border-4 border-blue-400 pointer-events-none z-10" />
-      <canvas ref={canvasRef} className="w-full h-full block" />
-    </div>
+    <canvas 
+      ref={canvasRef} 
+      className="w-screen h-screen block border-4 border-blue-500 shadow-lg"
+    />
   );
 }
