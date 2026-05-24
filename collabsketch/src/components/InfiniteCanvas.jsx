@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
-import { fabric } from 'fabric';
+import * as fabricModule from 'fabric';
+const fabric = fabricModule.default || fabricModule;
 
 export default function InfiniteCanvas() {
   const canvasRef = useRef(null);
