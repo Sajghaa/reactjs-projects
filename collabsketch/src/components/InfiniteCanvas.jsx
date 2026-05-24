@@ -6,7 +6,19 @@ export default function InfiniteCanvas() {
   const fabricCanvasRef = useRef(null);
 
   useEffect(() => {
-    // Initialize Fabric canvas
+    // IMPORTANT: If a Fabric canvas already exists on this element, dispose it first
+    if (fabricCanvasRef.current) {
+      fabricCanvasRef.current.dispose();
+      fabricCanvasRef.current = null;
+    }
+
+    // Clear the canvas element content (just in case)
+    if (canvasRef.current) {
+      const ctx = canvasRef.current.getContext('2d');
+      if (ctx) ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+    }
+
+    // Create new Fabric canvas
     const canvas = new fabric.Canvas(canvasRef.current, {
       backgroundColor: '#f8f9fa',
       width: window.innerWidth,
@@ -15,7 +27,7 @@ export default function InfiniteCanvas() {
     });
     fabricCanvasRef.current = canvas;
 
-    // Zoom & Pan (infinite canvas illusion)
+    // ---------- Zoom & Pan ----------
     canvas.on('mouse:wheel', (opt) => {
       const delta = opt.e.deltaY;
       let zoom = canvas.getZoom();
@@ -26,11 +38,10 @@ export default function InfiniteCanvas() {
       opt.e.preventDefault();
     });
 
-    // Optional: pan with middle mouse button
     let panning = false;
     let lastPosX = 0, lastPosY = 0;
     canvas.on('mouse:down', (opt) => {
-      if (opt.e.button === 1) { // middle button
+      if (opt.e.button === 1) {
         panning = true;
         lastPosX = opt.e.clientX;
         lastPosY = opt.e.clientY;
@@ -51,16 +62,22 @@ export default function InfiniteCanvas() {
       canvas.selection = true;
     });
 
-    // Add some default drawing tools (pen, rectangle)
+    // Default drawing mode
     canvas.isDrawingMode = true;
     canvas.freeDrawingBrush.width = 3;
     canvas.freeDrawingBrush.color = '#000000';
 
-    // Cleanup
-    return () => canvas.dispose();
-  }, []);
+    // Cleanup function – runs before unmount or before re-running effect
+    return () => {
+      if (fabricCanvasRef.current) {
+        fabricCanvasRef.current.dispose();
+        fabricCanvasRef.current = null;
+      }
+    };
+  }, []); // Empty dependency array ensures this runs only once after mount
+  // (StrictMode will still run twice, but our cleanup handles it)
 
-  // Helper function to change drawing mode from outside
+  // Helper to expose methods (optional, for toolbar)
   const setDrawingMode = (mode, options = {}) => {
     const canvas = fabricCanvasRef.current;
     if (!canvas) return;
@@ -70,13 +87,13 @@ export default function InfiniteCanvas() {
       canvas.freeDrawingBrush.color = options.color || '#000000';
     } else if (mode === 'rectangle') {
       canvas.isDrawingMode = false;
-      // We'll implement rectangle drawing manually in next step
+      // Add rectangle drawing later
     }
   };
 
-  // Expose methods via window for quick testing (remove later)
+  // Expose for external use (remove later)
   if (typeof window !== 'undefined') {
-    window.infiniteCanvas = { setDrawingMode, fabricCanvas: fabricCanvasRef };
+    window.infiniteCanvas = { setDrawingMode, getCanvas: () => fabricCanvasRef.current };
   }
 
   return <canvas ref={canvasRef} className="w-screen h-screen block" />;
