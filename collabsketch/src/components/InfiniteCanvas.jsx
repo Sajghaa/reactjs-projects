@@ -1,15 +1,43 @@
 import { useEffect, useRef } from 'react';
 import * as fabricModule from 'fabric';
+import io from 'socket.io-client';
+
 const fabric = fabricModule.default || fabricModule;
 
 export default function InfiniteCanvas() {
   const canvasRef = useRef(null);
   const fabricCanvasRef = useRef(null);
+  const socketRef = useRef(null);
 
   useEffect(() => {
+    // ---- Connect to WebSocket server ----
+    socketRef.current = io('http://localhost:3001');
+    const socket = socketRef.current;
+
+    // Listen for drawings from other users
+    socket.on('draw', (data) => {
+      if (!fabricCanvasRef.current) return;
+      // Deserialize the Fabric object and add it to canvas
+      fabric.util.enlivenObjects([data], (objects) => {
+        objects.forEach(obj => {
+          fabricCanvasRef.current.add(obj);
+          fabricCanvasRef.current.renderAll();
+        });
+      });
+    });
+
+    // Optional: handle clear command
+    socket.on('clear', () => {
+      if (fabricCanvasRef.current) {
+        fabricCanvasRef.current.clear();
+        fabricCanvasRef.current.backgroundColor = '#fafafa';
+        fabricCanvasRef.current.renderAll();
+      }
+    });
+
+    // ---- Initialize Fabric Canvas ----
     if (fabricCanvasRef.current) {
       fabricCanvasRef.current.dispose();
-      fabricCanvasRef.current = null;
     }
 
     const canvas = new fabric.Canvas(canvasRef.current, {
@@ -34,6 +62,15 @@ export default function InfiniteCanvas() {
       canvas.renderAll();
     }, 0);
 
+    // ---- Broadcast drawing events to other users ----
+    const handleObjectAdded = (e) => {
+      if (e.target) {
+        socket.emit('draw', e.target.toJSON());
+      }
+    };
+    canvas.on('object:added', handleObjectAdded);
+
+    // ---- Zoom & Pan (same as before) ----
     canvas.on('mouse:wheel', (opt) => {
       const delta = opt.e.deltaY;
       let zoom = canvas.getZoom();
@@ -68,7 +105,13 @@ export default function InfiniteCanvas() {
       canvas.selection = true;
     });
 
+    // ---- Cleanup ----
     return () => {
+      if (socket) {
+        socket.off('draw');
+        socket.off('clear');
+        socket.disconnect();
+      }
       if (fabricCanvasRef.current) {
         fabricCanvasRef.current.dispose();
         fabricCanvasRef.current = null;
